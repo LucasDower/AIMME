@@ -29,24 +29,33 @@ const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
 const points = meshManager.generateGridMesh();
 const pointsBuffer = twgl.createBufferInfoFromArrays(gl, points);
 
+/*
 const tex = twgl.createTexture(gl, {
     min: gl.NEAREST,
     mag: gl.NEAREST,
     src: [
-        255, 255, 255, 255,
-        192, 192, 192, 255,
-        192, 192, 192, 255,
+        255, 100, 100, 255,
+        100, 255, 100, 255,
+        100, 100, 255, 255,
         255, 255, 255, 255,
     ],
 });
+*/
+const tex = twgl.createTexture(gl, {
+    min: gl.NEAREST,
+    mag: gl.NEAREST,
+    src: './resources/anvil.png'
+});
+
+
 
 const shaded_uniforms = {
-    u_lightWorldPos: [4, 8, -10],
-    u_lightColor: [1, 1.0, 1.0, 1],
-    u_ambient: [0.2, 0.2, 0.2, 1],
-    u_specular: [0.5, 0.5, 0.5, 1],
-    u_shininess: 50,
-    u_specularFactor: 1,
+    u_lightWorldPos: [10, -5, 2.5],
+    //u_lightColor: [1.0, 1.0, 1.0, 1],
+    //u_ambient: [0.2, 0.2, 0.2, 1],
+    //u_specular: [0.5, 0.5, 0.5, 1],
+    //u_shininess: 50,
+    //u_specularFactor: 1,
     u_diffuse: tex,
 };
 
@@ -74,7 +83,7 @@ function render(time) {
     gl.enable(gl.DEPTH_TEST);
     gl.enable(gl.CULL_FACE);
     gl.enable(gl.BLEND);
-    gl.clearColor(0.2,0.2,0.2,1);
+    gl.clearColor(0.1,0.1,0.1,1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     var world = camera.getWorldMatrix();

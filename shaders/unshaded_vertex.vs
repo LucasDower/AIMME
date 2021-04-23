@@ -11,5 +11,5 @@ void main() {
   v_colour = colour;
   v_distance = length(position);
 
-  gl_Position = u_worldViewProjection * vec4(u_scale * position, 1.0);
+  gl_Position = u_worldViewProjection * vec4(u_scale * position  * 0.5, 1.0);
 }

@@ -8,9 +8,9 @@ class ArcballCamera {
         this.zNear = zNear;
         this.zFar = zFar;
 
-        this.distance = 10.0;
-        this.azimuth = 0.4;
-        this.elevation = 1.0;
+        this.distance = 8.0;
+        this.azimuth = 0.6;
+        this.elevation = 1.3;
         this.updateCameraPosition();
 
         this.target = [0, 0.5, 0];
@@ -37,6 +37,7 @@ class ArcballCamera {
 
     updateCameraPosition() {
         this.eye = [this.distance * Math.cos(this.azimuth) * -Math.sin(this.elevation), this.distance * Math.cos(this.elevation), this.distance * Math.sin(this.azimuth) * -Math.sin(this.elevation)];
+        console.log(this.azimuth, this.elevation);
     }
 
     getProjectionMatrix() {

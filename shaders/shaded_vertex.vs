@@ -8,17 +8,14 @@ attribute vec4 position;
 attribute vec3 normal;
 attribute vec2 texcoord;
 
-varying vec4 v_position;
 varying vec2 v_texCoord;
 varying vec3 v_normal;
-varying vec3 v_surfaceToLight;
-varying vec3 v_surfaceToView;
+varying vec3 v_lightDir;
 
 void main() {
   v_texCoord = texcoord;
-  v_position = u_worldViewProjection * (position * vec4(0.0625, 0.0625, 0.0625, 1.0) - vec4(0.5, 0.0, 0.5, 0.0));
+  vec4 a_position = u_worldViewProjection * (position * vec4(0.0625, 0.0625, 0.0625, 1.0) - vec4(0.5, 0.0, 0.5, 0.0)); // TODO: Add model translation matrix
   v_normal = (u_worldInverseTranspose * vec4(normal, 0)).xyz;
-  v_surfaceToLight = u_lightWorldPos - (u_world * position).xyz;
-  v_surfaceToView = (u_viewInverse[3] - (u_world * position)).xyz;
-  gl_Position = v_position;
+  v_lightDir = normalize(-u_lightWorldPos);
+  gl_Position = a_position;
 }
