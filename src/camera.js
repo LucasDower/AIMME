@@ -8,7 +8,7 @@ class ArcballCamera {
         this.zNear = zNear;
         this.zFar = zFar;
 
-        this.setCameraPosition(0.5, Math.PI/2, 8.0);
+        this.setCameraPosition(0.4, 1.2, 10.0);
 
         this.target = [0, 0, 0];
         this.up = [0, 1, 0];

@@ -34,4 +34,6 @@ void main() {
                 u_specular * litR.z * u_specularFactor)).rgb,
       diffuseColor.a);
   gl_FragColor = outColor;
+
+  //gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 }
