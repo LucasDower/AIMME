@@ -60,6 +60,11 @@ gl.canvas.addEventListener('mousemove', (e) => {
     }
 });
 
+// Scroll wheen controls camera distance
+gl.canvas.addEventListener('wheel', (e) => {
+    camera.handleScroll(e);
+});
+
 
 function render(time) {
     twgl.resizeCanvasToDisplaySize(gl.canvas);

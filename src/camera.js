@@ -8,9 +8,12 @@ class ArcballCamera {
         this.zNear = zNear;
         this.zFar = zFar;
 
-        this.setCameraPosition(0.4, 1.2, 10.0);
+        this.distance = 10.0;
+        this.azimuth = 0.4;
+        this.elevation = 1.0;
+        this.updateCameraPosition();
 
-        this.target = [0, 0, 0];
+        this.target = [0, 0.5, 0];
         this.up = [0, 1, 0];
     }
 
@@ -24,10 +27,10 @@ class ArcballCamera {
         this.updateCameraPosition();
     }
 
-    setCameraPosition(azimuth, elevation, distance) {
-        this.azimuth = azimuth;
-        this.elevation = elevation;
-        this.distance = distance;
+    handleScroll(e) {
+        this.distance += e.deltaY * 0.005;
+        console.log(this.distance);
+        this.distance = Math.max(Math.min(15.0, this.distance), 2.0);
 
         this.updateCameraPosition();
     }
