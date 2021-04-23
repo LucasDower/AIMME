@@ -24,13 +24,7 @@ function createWindow () {
         pathname: path.join(__dirname, '../index.html'),
         protocol: 'file:',
         slashes: true
-    }));
-
-    /*
-    model = fs.readFileSync('./hopper.json', 'utf8');
-    model = JSON.parse(model);
-    console.log(model.elements);
-    */
+    }));    
 
     // Open the DevTools.
     //mainWindow.webContents.openDevTools();

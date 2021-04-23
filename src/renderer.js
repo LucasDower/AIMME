@@ -18,12 +18,11 @@ const gl = document.querySelector("#c").getContext("webgl");
 const shadedProgram = twgl.createProgramInfo(gl, [shaded_vertex_shader, shaded_fragment_shader]);
 const unshadedProgram = twgl.createProgramInfo(gl, [unshaded_vertex_shader, unshaded_fragment_shader]);
 
-const arrays = {
-    position: [1, 1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1, -1, 1, -1, 1, 1, 1, 1, 1, 1, 1, -1, -1, 1, -1, -1, -1, -1, 1, -1, -1, 1, -1, 1, -1, -1, 1, 1, 1, 1, -1, 1, 1, -1, -1, 1, 1, -1, 1, -1, 1, -1, 1, 1, -1, 1, -1, -1, -1, -1, -1],
-    normal: [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, -1, 0, 0, -1, 0, 0, -1, 0, 0, -1],
-    texcoord: [1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1],
-    indices: [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7, 8, 9, 10, 8, 10, 11, 12, 13, 14, 12, 14, 15, 16, 17, 18, 16, 18, 19, 20, 21, 22, 20, 22, 23],
-};
+
+let model = fs.readFileSync('./resources/template_anvil.json', 'utf8');
+model = JSON.parse(model);
+const arrays = meshManager.generateJSONMesh(model);
+//const arrays = meshManager.generateFromToMesh(part.from, part.to);
 
 const bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
 
@@ -43,7 +42,7 @@ const tex = twgl.createTexture(gl, {
 
 const shaded_uniforms = {
     u_lightWorldPos: [4, 8, -10],
-    u_lightColor: [1, 0.8, 0.8, 1],
+    u_lightColor: [1, 1.0, 1.0, 1],
     u_ambient: [0.2, 0.2, 0.2, 1],
     u_specular: [0.5, 0.5, 0.5, 1],
     u_shininess: 50,
@@ -51,7 +50,7 @@ const shaded_uniforms = {
     u_diffuse: tex,
 };
 
-var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canvas.clientHeight, 0.5, 20.0);
+var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canvas.clientHeight, 0.5, 30.0);
 
 gl.canvas.addEventListener('mousemove', (e) => {
     mouseHandler.handleInput(e);

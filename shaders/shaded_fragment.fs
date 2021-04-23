@@ -21,8 +21,7 @@ vec4 lit(float l ,float h, float m) {
 }
 
 void main() {
-  vec4 diffuseColor = texture2D(u_diffuse, v_texCoord);
-  //vec4 diffuseColor = vec4(v_normal, 1.0);
+  vec4 diffuseColor = texture2D(u_diffuse, v_texCoord) * 0.5 + vec4(0.0, 0.0, 1.0, 1.0);
   vec3 a_normal = normalize(v_normal);
   vec3 surfaceToLight = normalize(v_surfaceToLight);
   vec3 surfaceToView = normalize(v_surfaceToView);

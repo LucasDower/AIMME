@@ -16,7 +16,7 @@ varying vec3 v_surfaceToView;
 
 void main() {
   v_texCoord = texcoord;
-  v_position = u_worldViewProjection * position;
+  v_position = u_worldViewProjection * (position * vec4(0.0625, 0.0625, 0.0625, 1.0) - vec4(0.5, 0.0, 0.5, 0.0));
   v_normal = (u_worldInverseTranspose * vec4(normal, 0)).xyz;
   v_surfaceToLight = u_lightWorldPos - (u_world * position).xyz;
   v_surfaceToView = (u_viewInverse[3] - (u_world * position)).xyz;
