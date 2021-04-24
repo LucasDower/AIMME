@@ -307,6 +307,7 @@ function generateJSONMesh(json) {
             indices.push(mesh.indices[j] + offset);
         }
         offset += mesh.facesDrawn * 4;
+        
     }
 
     return { position: position, normal: normal, texcoord: texcoord, indices: indices };

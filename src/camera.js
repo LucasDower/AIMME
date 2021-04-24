@@ -29,7 +29,7 @@ class ArcballCamera {
 
     handleScroll(e) {
         this.distance += e.deltaY * 0.005;
-        console.log(this.distance);
+        //console.log(this.distance);
         this.distance = Math.max(Math.min(15.0, this.distance), 2.0);
 
         this.updateCameraPosition();
@@ -37,7 +37,7 @@ class ArcballCamera {
 
     updateCameraPosition() {
         this.eye = [this.distance * Math.cos(this.azimuth) * -Math.sin(this.elevation), this.distance * Math.cos(this.elevation), this.distance * Math.sin(this.azimuth) * -Math.sin(this.elevation)];
-        console.log(this.azimuth, this.elevation);
+        //console.log(this.azimuth, this.elevation);
     }
 
     getProjectionMatrix() {
