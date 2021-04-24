@@ -3,5 +3,5 @@ uniform mat4 u_worldViewProjection;
 attribute vec3 position;
 
 void main() {
-  gl_Position = u_worldViewProjection * vec4(position, 1.0);
+  gl_Position = u_worldViewProjection * vec4(position * 1.001, 1.0);
 }

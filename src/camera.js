@@ -60,6 +60,10 @@ class ArcballCamera {
         return m4.identity();
     }
 
+    getWorldViewProjection() {
+        return m4.multiply(this.getViewProjection(), this.getWorldMatrix());
+    }
+
 }
 
 

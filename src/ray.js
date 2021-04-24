@@ -51,6 +51,7 @@ function intersectMesh(mesh, rayOrigin, rayDest) {
     
     let minDist = 10000;
     let hitVertices = [];
+    let hitIndices = [];
     for (let i = 0; i < indices.length; i += 3) {
         let i0 = indices[i + 0] * 3;
         let i1 = indices[i + 1] * 3;
@@ -64,11 +65,24 @@ function intersectMesh(mesh, rayOrigin, rayDest) {
             if (k < minDist) {
                 minDist = k;
                 hitVertices = [v0, v1, v2];
+                hitIndices = [indices[i + 0], indices[i + 1], indices[i + 2]];
             }
         }
     }
 
-    return hitVertices;    
+    // TODO: change
+    if (hitIndices.length > 0) {
+        let min = Math.min(hitIndices[0], hitIndices[1], hitIndices[2]);
+
+        let is = [0, 1, 2, 3].map(x => 3 * (x + min));
+
+        let v0_ = v3.create(positions[is[0]] / 16.0 - 0.5, positions[is[0] + 1] / 16.0, positions[is[0] + 2] / 16.0 - 0.5);
+        let v1_ = v3.create(positions[is[1]] / 16.0 - 0.5, positions[is[1] + 1] / 16.0, positions[is[1] + 2] / 16.0 - 0.5);
+        let v2_ = v3.create(positions[is[2]] / 16.0 - 0.5, positions[is[2] + 1] / 16.0, positions[is[2] + 2] / 16.0 - 0.5);
+        let v3_ = v3.create(positions[is[3]] / 16.0 - 0.5, positions[is[3] + 1] / 16.0, positions[is[3] + 2] / 16.0 - 0.5);
+
+        return [v0_, v1_, v2_, v3_];
+    }
 }
 
 //module.exports.IntersectTriangle_MT97 = IntersectTriangle_MT97;
