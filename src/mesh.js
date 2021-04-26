@@ -74,13 +74,12 @@ function generateFace(positions, faceNormal, face, mesh) {
     let texcoord = [[0, 3], [2, 3], [2, 1], [0, 1]];
     for (let i = 0; i < 4; i++) {
         // Add vertex position
-        mesh.position.push(positions[i][0], positions[i][1], positions[i][2]);
+        mesh.position = mesh.position.concat(positions[i]);
         // Add vertex normal (all the same)
-        mesh.normal.push(faceNormal[0], faceNormal[1], faceNormal[2]);
+        mesh.normal = mesh.normal.concat(faceNormal);
         // Add vertex tex-coords, TODO: cleanup
         let tx = uv[(texcoord[i][0] + rot) % 4] / 16;
         let ty = uv[(texcoord[i][1] + rot) % 4] / 16;
-        //is.push(tx, ty);
         mesh.texcoord.push(tx, ty);
     }
 
@@ -92,19 +91,10 @@ function generateFace(positions, faceNormal, face, mesh) {
     mesh.facesDrawn++;
 }
 
-function generateFromToMesh(from, to, faces) {
-
+function generateElement(element, mesh) {
     // From and to coordinates
-    const f = {x: from[0], y: from[1], z: from[2]};
-    const t = {x: to[0], y: to[1], z: to[2]};
-
-    let mesh = {
-        position: [],
-        normal: [],
-        texcoord: [],
-        indices: [],
-        facesDrawn: 0
-    };
+    const f = {x: element.from[0], y: element.from[1], z: element.from[2]};
+    const t = {x: element.to[0], y: element.to[1], z: element.to[2]};
 
     const faceDirections = ['north', 'south', 'up', 'down', 'east', 'west'];
 
@@ -123,37 +113,24 @@ function generateFromToMesh(from, to, faces) {
         east: [-1, 0, 0], west: [1, 0,0]
     };
 
-    faceDirections.forEach(face => generateFace(positions[face], normals[face], faces[face], mesh));
-    
+    faceDirections.forEach(face => generateFace(positions[face], normals[face], element.faces[face], mesh));
+
     return mesh;
 }
 
-
 function generateJSONMesh(json) {
-    let meshElements = json.elements;
+    let mesh = {
+        position: [],
+        normal: [],
+        texcoord: [],
+        indices: [],
+        facesDrawn: 0
+    };
+    
+    json.elements.forEach(element => generateElement(element, mesh));
 
-    let position = [];
-    let normal = [];
-    let texcoord = [];
-    let indices = [];
-    let offset = 0;
-
-    for (let i = 0; i < meshElements.length; i++) {
-        let element = meshElements[i];
-        mesh = generateFromToMesh(element.from, element.to, element.faces);
-
-        position = position.concat(mesh.position);
-        normal = normal.concat(mesh.normal);
-        texcoord = texcoord.concat(mesh.texcoord);
-        for (let j = 0; j < mesh.indices.length; j++) {
-            indices.push(mesh.indices[j] + offset);
-        }
-        offset += mesh.facesDrawn * 4;
-    }
-
-    return { position: position, normal: normal, texcoord: texcoord, indices: indices };
+    return mesh;
 }
 
 module.exports.generateGridMesh = generateGridMesh;
 module.exports.generateJSONMesh = generateJSONMesh;
-module.exports.generateFromToMesh = generateFromToMesh;
