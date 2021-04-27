@@ -1,3 +1,4 @@
+const { v3: Vector3 } = require("twgl.js");
 
 function getGridColour(i, j, isXAxis) {
     if (i == 0 && isXAxis) {
@@ -62,6 +63,37 @@ function generateGridMesh() {
     return { position: { numComponents: 3, data: vertices }, colour: { numComponents: 3, data: colours }, indices: indices };
 }
 
+function getMeshVertex(mesh, vertexIndex, transform) {
+    let v0 = mesh.position[vertexIndex * 3];
+    let v1 = mesh.position[vertexIndex * 3 + 1];
+    let v2 = mesh.position[vertexIndex * 3 + 2];
+
+    if (transform) {
+        v0 = (v0 / 16.0) - 0.5;
+        v1 = (v1 / 16.0) - 0.5;
+        v2 = (v2 / 16.0) - 0.5;
+    }
+
+    return Vector3.create(v0, v1, v2);
+}
+
+let vertexIndexMap = {};
+
+function editMeshVertex(mesh, vertexIndex, editedVertex) {
+    for (let duplicateVertexIndex of vertexIndexMap[vertexIndex]) {
+        mesh.position[duplicateVertexIndex + 0] = editedVertex[0];
+        mesh.position[duplicateVertexIndex + 1] = editedVertex[1];
+        mesh.position[duplicateVertexIndex + 2] = editedVertex[2];
+    }
+}
+
+function editMeshVertexY(mesh, vertexIndex, y) {
+    console.log('a' + vertexIndex);
+    for (let duplicateVertexIndex of vertexIndexMap[vertexIndex]) {
+        mesh.position[duplicateVertexIndex + 1] = y;
+    }
+}
+
 function generateFace(positions, faceNormal, face, mesh) {
     if (face == undefined) {
         return;
@@ -100,7 +132,7 @@ function generateElement(element, mesh) {
 
     const positions = {
         north: [[f.x, t.y, f.z], [t.x, t.y, f.z], [t.x, f.y, f.z], [f.x, f.y, f.z]],
-        south: [[t.x, t.y, t.z], [f.x, t.y, t.z], [f.x, f.y, t.z], [f.x, t.y, f.z]],
+        south: [[t.x, t.y, t.z], [f.x, t.y, t.z], [f.x, f.y, t.z], [t.x, f.y, t.z]],
         up:    [[f.x, t.y, t.z], [t.x, t.y, t.z], [t.x, t.y, f.z], [f.x, t.y, f.z]],
         down:  [[f.x, f.y, f.z], [t.x, f.y, f.z], [t.x, f.y, t.z], [f.x, f.y, t.z]],
         east:  [[f.x, t.y, t.z], [f.x, t.y, f.z], [f.x, f.y, f.z], [f.x, f.y, t.z]],
@@ -128,9 +160,29 @@ function generateJSONMesh(json) {
     };
     
     json.elements.forEach(element => generateElement(element, mesh));
+    delete mesh.facesDrawn;
+
+    // Generate a map from triangle to square-face. When a ray intersects with a tri,
+    // we must retrieve the other triangle which makes up the square-face.
+    let intermediateMap = {};
+    for (let i = 0; i < mesh.position.length; i+=3) {
+        let vertex = mesh.position.slice(i, i+3);
+        intermediateMap[vertex] = (intermediateMap[vertex] || []).concat(i);
+        //console.log(vertex);
+    }
+    for (let values of Object.values(intermediateMap)) {
+        for (let v of values) {
+            vertexIndexMap[v / 3] = values;
+        }
+    }
+
+    console.log(vertexIndexMap);
 
     return mesh;
 }
 
 module.exports.generateGridMesh = generateGridMesh;
 module.exports.generateJSONMesh = generateJSONMesh;
+module.exports.getMeshVertex = getMeshVertex;
+module.exports.editMeshVertex = editMeshVertex;
+module.exports.editMeshVertexY = editMeshVertexY;

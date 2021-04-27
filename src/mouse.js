@@ -31,6 +31,10 @@ module.exports = {
         let normX = 2 * (currentMouse.x / gl.canvas.width) - 1;
         let normY = -(2 * (currentMouse.y / gl.canvas.height) - 1);
         return { x: normX, y: normY };
+    },
+
+    getMousePos: function () {
+        return currentMouse;
     }
 
 };
