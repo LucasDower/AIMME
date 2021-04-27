@@ -88,15 +88,18 @@ function editMeshVertex(mesh, vertexIndex, editedVertex) {
 }
 
 function editMeshVertexY(mesh, vertexIndex, y) {
-    console.log('a' + vertexIndex);
     for (let duplicateVertexIndex of vertexIndexMap[vertexIndex]) {
         mesh.position[duplicateVertexIndex + 1] = y;
     }
 }
 
-function generateFace(positions, faceNormal, face, mesh) {
+function generateFace(positions, faceNormal, face, mesh, element) {
     if (face == undefined) {
         return;
+    }
+
+    if (element.rotation) {
+        rotateElement(element, positions)
     }
 
     let uv = face.uv;
@@ -130,7 +133,7 @@ function generateElement(element, mesh) {
 
     const faceDirections = ['north', 'south', 'up', 'down', 'east', 'west'];
 
-    const positions = {
+    let positions = {
         north: [[f.x, t.y, f.z], [t.x, t.y, f.z], [t.x, f.y, f.z], [f.x, f.y, f.z]],
         south: [[t.x, t.y, t.z], [f.x, t.y, t.z], [f.x, f.y, t.z], [t.x, f.y, t.z]],
         up:    [[f.x, t.y, t.z], [t.x, t.y, t.z], [t.x, t.y, f.z], [f.x, t.y, f.z]],
@@ -145,10 +148,64 @@ function generateElement(element, mesh) {
         east: [-1, 0, 0], west: [1, 0,0]
     };
 
-    faceDirections.forEach(face => generateFace(positions[face], normals[face], element.faces[face], mesh));
+    faceDirections.forEach(face => generateFace(positions[face], normals[face], element.faces[face], mesh, element));
 
     return mesh;
 }
+
+
+function createRotationMatrix(theta, l, m, n) {
+    let matrix = [[0,0,0], [0,0,0], [0,0,0]];
+    // Top row
+    matrix[0][0] = l * l * (1 - Math.cos(theta)) + Math.cos(theta)
+    matrix[0][1] = m * l * (1 - Math.cos(theta)) - n * Math.sin(theta)
+    matrix[0][2] = n * l * (1 - Math.cos(theta)) + m * Math.sin(theta)
+    // Middle row
+    matrix[1][0] = l * m * (1 - Math.cos(theta)) + n * Math.sin(theta)
+    matrix[1][1] = m * m * (1 - Math.cos(theta)) + Math.cos(theta)
+    matrix[1][2] = n * m * (1 - Math.cos(theta)) - l * Math.sin(theta)
+    // Bottom row
+    matrix[2][0] = l * n * (1 - Math.cos(theta)) - m * Math.sin(theta)
+    matrix[2][1] = m * n * (1 - Math.cos(theta)) + l * Math.sin(theta)
+    matrix[2][2] = n * n * (1 - Math.cos(theta)) + Math.cos(theta)
+
+    return matrix;
+}
+
+function multiplyMatrixVector(matrix, vector) {
+    let result = [0, 0, 0];
+    result[0] = matrix[0][0] * vector[0] + matrix[0][1] * vector[1] + matrix[0][2] * vector[2];
+    result[1] = matrix[1][0] * vector[0] + matrix[1][1] * vector[1] + matrix[1][2] * vector[2];
+    result[2] = matrix[2][0] * vector[0] + matrix[2][1] * vector[1] + matrix[2][2] * vector[2];
+    return result;
+}
+
+function rotateElement(element, positions) {
+    console.log(positions);
+
+    const angle = element.rotation.angle * 0.0174533;
+
+    const axisToVector = {
+        'x': {l: 1, m: 0, n: 0},
+        'y': {l: 0, m: 1, n: 0},
+        'z': {l: 0, m: 0, n: 1}
+    };
+
+    const axis = axisToVector[element.rotation.axis];
+    const matrix = createRotationMatrix(angle, axis.l, axis.m, axis.n);
+    const origin = element.rotation.origin;
+
+    for (let position of positions) {
+        position[0] -= origin[0];
+        position[1] -= origin[1];
+        position[2] -= origin[2];
+        const rotated = multiplyMatrixVector(matrix, position);
+        position[0] = rotated[0] + origin[0];
+        position[1] = rotated[1] + origin[1];
+        position[2] = rotated[2] + origin[2];
+    }
+}
+
 
 function generateJSONMesh(json) {
     let mesh = {
@@ -168,15 +225,12 @@ function generateJSONMesh(json) {
     for (let i = 0; i < mesh.position.length; i+=3) {
         let vertex = mesh.position.slice(i, i+3);
         intermediateMap[vertex] = (intermediateMap[vertex] || []).concat(i);
-        //console.log(vertex);
     }
     for (let values of Object.values(intermediateMap)) {
         for (let v of values) {
             vertexIndexMap[v / 3] = values;
         }
     }
-
-    console.log(vertexIndexMap);
 
     return mesh;
 }

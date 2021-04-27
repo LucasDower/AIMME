@@ -46,8 +46,9 @@ function intersectTriangle(rayOrigin, rayDest, vert0, vert1, vert2) {
 }
 
 function intersectMesh(mesh, rayOrigin, rayDest) {
-    positions = mesh.position;
-    indices = mesh.indices;
+    let positions = mesh.position;
+    let normals = mesh.normals;
+    let indices = mesh.indices;
     
     let minDist = 10000;
     let hitIndices = [];
@@ -75,7 +76,6 @@ function intersectMesh(mesh, rayOrigin, rayDest) {
                 hitVertices = [v0, v1, v2];
                 hitIndices = [indices[i + 0], indices[i + 1], indices[i + 2]];
             }
-            console.log(a);
         }
     }
 
@@ -88,9 +88,9 @@ function intersectMesh(mesh, rayOrigin, rayDest) {
         let v0_ = Vector3.create(positions[is[0]] / 16.0 - 0.5, positions[is[0] + 1] / 16.0, positions[is[0] + 2] / 16.0 - 0.5);
         let v1_ = Vector3.create(positions[is[1]] / 16.0 - 0.5, positions[is[1] + 1] / 16.0, positions[is[1] + 2] / 16.0 - 0.5);
         let v2_ = Vector3.create(positions[is[2]] / 16.0 - 0.5, positions[is[2] + 1] / 16.0, positions[is[2] + 2] / 16.0 - 0.5);
-        let Vector3_ = Vector3.create(positions[is[3]] / 16.0 - 0.5, positions[is[3] + 1] / 16.0, positions[is[3] + 2] / 16.0 - 0.5);
+        let v3_ = Vector3.create(positions[is[3]] / 16.0 - 0.5, positions[is[3] + 1] / 16.0, positions[is[3] + 2] / 16.0 - 0.5);
 
-        return {vertices: [v0_, v1_, v2_, Vector3_], indices:is};
+        return {vertices: [v0_, v1_, v2_, v3_], indices:is};
     }
 }
 

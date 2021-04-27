@@ -15,7 +15,7 @@ var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canv
 
 
 // Load anvil model data and texture
-let model = fs.readFileSync('./resources/template_anvil.json', 'utf8');
+let model = fs.readFileSync('./resources/lectern.json', 'utf8');
 model = JSON.parse(model);
 
 const texture = twgl.createTexture(gl, {
@@ -31,10 +31,10 @@ const gridMesh = meshManager.generateGridMesh();
 const gridBuffer = twgl.createBufferInfoFromArrays(gl, gridMesh);
 
 
-let index = 0;
-let vertex = meshManager.getMeshVertex(modelMesh, 0, false);
-vertex[1] += 5;
-meshManager.editMeshVertex(modelMesh, index, vertex);
+//let index = 0;
+//let vertex = meshManager.getMeshVertex(modelMesh, 0, false);
+//vertex[1] += 5;
+//meshManager.editMeshVertex(modelMesh, index, vertex);
 
 let modelBuffer = twgl.createBufferInfoFromArrays(gl, modelMesh);
 
