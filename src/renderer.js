@@ -17,7 +17,7 @@ var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canv
 const gridMesh = meshManager.generateGridMesh();
 const gridBuffer = twgl.createBufferInfoFromArrays(gl, gridMesh);
 
-let hopper = new meshManager.Model('./resources/models/block/hopper.json', gl);
+//let hopper = new meshManager.Model('./resources/models/block/hopper.json', gl);
 let lectern = new meshManager.Model('./resources/models/block/lectern.json', gl);
 console.log(lectern);
 
@@ -195,8 +195,8 @@ function render(time) {
     gl.clearColor(0.1,0.1,0.1,1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    drawModel(lectern, v3.create(-0.75, 0.0, 0));
-    drawModel(hopper, v3.create(0.75, 0.0, 0));
+    drawModel(lectern, v3.create(0.0, 0.0, 0));
+    //drawModel(hopper, v3.create(0.75, 0.0, 0));
     drawGrid();
     //drawFaceHighlight();
 

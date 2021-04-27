@@ -97,26 +97,33 @@ function editMeshVertexY(mesh, vertexIndex, y) {
 }
 
 
-function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset, num_texs) {
-    //console.log(uv_offset);
-
+function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset, num_texs, rot) {
+    console.log("rot: " + rot);
+    let y = [0, 0];
     if (vertex_normal[1] == 0 && vertex_normal[2] == 0) {
         let tx = 1 - vertex_position[2] / 16;
         let ty = 1 - vertex_position[1] / 16;
-        return [tx / num_texs + uv_offset, ty]; 
+        y = [tx / num_texs + uv_offset, ty]; 
     }
-    if (vertex_normal[0] == 0 && vertex_normal[1] == 0) {
+    else if (vertex_normal[0] == 0 && vertex_normal[1] == 0) {
         let tx = 1 - vertex_position[0] / 16;
         let ty = 1 - vertex_position[1] / 16;
-        return [tx / num_texs + uv_offset, ty]; 
+        y = [tx / num_texs + uv_offset, ty]; 
     }
     // TODO: This one needs checking
-    if (vertex_normal[2] == 0 && vertex_normal[0] == 0) {
+    else if (vertex_normal[2] == 0 && vertex_normal[0] == 0) {
         let tx = 1 - vertex_position[2] / 16;
         let ty = 1 - vertex_position[0] / 16;
-        return [tx / num_texs + uv_offset, ty]; 
+        y = [tx / num_texs + uv_offset, ty]; 
+    } else {
+        throw "Bad normal";
     }
-    return [0, 0]; 
+    /*
+    if (rot == 2) {
+        return [1.0 - y[0], 1.0 - y[1]];
+    }
+    */
+    return y;
 }
 
 
@@ -135,8 +142,8 @@ function generateFace(positions, faceNormal, face, mesh, element, uv_offsets) {
         rotateElement(element, positions)
     }
 
-    let rot = (face.rotation || 0.0) / 90.0;
-    rot += 2;
+    let rot = (face.rotation || 180.0) / 90.0;
+    //rot += 2;
 
     // Add a (x,y) UV coordinate for  
     let texcoord = [[0, 3], [2, 3], [2, 1], [0, 1]];
@@ -154,7 +161,7 @@ function generateFace(positions, faceNormal, face, mesh, element, uv_offsets) {
             mesh.texcoord.push(tx, ty);
         } else {
             console.log('Generate from positions');
-            let t = generateUVsFromPosition(positions[i], faceNormal, uv_offset, num_texs);
+            let t = generateUVsFromPosition(positions[i], faceNormal, uv_offset, num_texs, rot);
             mesh.texcoord.push(t[0], t[1]);
         }
     }
