@@ -11,34 +11,21 @@ const textureUtil = require('./src/texture.js');
 const m4 = twgl.m4;
 const v3 = twgl.v3;
 const gl = document.querySelector("#c").getContext("webgl");
+
 var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canvas.clientHeight, 0.5, 30.0);
-
-
-// Load anvil model data and texture
-let model = fs.readFileSync('./resources/models/block/hopper.json', 'utf8');
-model = JSON.parse(model);
-
-let texture = textureUtil.createTextureAtlas(model, gl);
-let uv_offsets = texture.uv_offset;
-texture = twgl.createTexture(gl, texture.tex);
-console.log(uv_offsets)
-
-// Build mesh from model data
-const modelMesh = meshManager.generateJSONMesh(model, uv_offsets);
 
 const gridMesh = meshManager.generateGridMesh();
 const gridBuffer = twgl.createBufferInfoFromArrays(gl, gridMesh);
 
+let hopper = new meshManager.Model('./resources/models/block/hopper.json', gl);
+let lectern = new meshManager.Model('./resources/models/block/lectern.json', gl);
+console.log(lectern);
 
-//let index = 0;
-//let vertex = meshManager.getMeshVertex(modelMesh, 0, false);
-//vertex[1] += 5;
-//meshManager.editMeshVertex(modelMesh, index, vertex);
-
-let modelBuffer = twgl.createBufferInfoFromArrays(gl, modelMesh);
 
 let hitting = false;
 let rotateCamera = false;
+
+/*
 let pseudoTime = 0;
 
 let hoverIndices = [];
@@ -47,11 +34,13 @@ let editingIndices = [];
 let editing = false;
 
 let initialEditMouse = null;
+*/
 
 gl.canvas.addEventListener('mousedown', (e) => {
     if (!hitting) {
         rotateCamera = true;
-    } else {
+    }
+    /*else {
         editingIndices = hoverIndices;
         initialPositions[0].x = modelMesh.position[editingIndices[0] + 0];
         initialPositions[0].y = modelMesh.position[editingIndices[0] + 1];
@@ -68,11 +57,12 @@ gl.canvas.addEventListener('mousedown', (e) => {
         initialEditMouse = mouseHandler.getMousePos();
         editing = true;
     }
+    */
 });
 
 gl.canvas.addEventListener('mouseup', (e) => {
     rotateCamera = false;
-    editing = false;
+    //editing = false;
 });
 
 gl.canvas.addEventListener('mousemove', (e) => {
@@ -82,6 +72,7 @@ gl.canvas.addEventListener('mousemove', (e) => {
         var delta = mouseHandler.getMouseDelta();
         camera.updateCamera(delta);
     }
+    /*
     else if (editing) {
         //console.log('editing');
         let curMou = mouseHandler.getMousePos();
@@ -102,6 +93,7 @@ gl.canvas.addEventListener('mousemove', (e) => {
         }
         modelBuffer = twgl.createBufferInfoFromArrays(gl, modelMesh);
     }
+    */
 });
 
 gl.canvas.addEventListener('wheel', (e) => {
@@ -124,26 +116,27 @@ function drawGrid() {
 }
 
 
-function drawModel() {
+function drawModel(model, translation) {
 
     const world = camera.getWorldMatrix();
 
     const shaded_uniforms = {
         u_lightWorldPos: [10, -5, 2.5],
-        u_diffuse: texture,
+        u_diffuse: model.textureUnit,
         u_viewInverse: camera.getCameraMatrix(),
         u_world: world,
         u_worldInverseTranspose: m4.transpose(m4.inverse(world)),
-        u_worldViewProjection: m4.multiply(camera.getViewProjection(), world)
+        u_worldViewProjection: m4.multiply(camera.getViewProjection(), world),
+        u_translate: translation
     };
 
     gl.useProgram(shaderManager.shadedProgram.program);
-    twgl.setBuffersAndAttributes(gl, shaderManager.shadedProgram, modelBuffer);
+    twgl.setBuffersAndAttributes(gl, shaderManager.shadedProgram, model.modelBuffer);
     twgl.setUniforms(shaderManager.shadedProgram, shaded_uniforms);
-    gl.drawElements(gl.TRIANGLES, modelBuffer.numElements, gl.UNSIGNED_SHORT, 0);
+    gl.drawElements(gl.TRIANGLES, model.modelBuffer.numElements, gl.UNSIGNED_SHORT, 0);
 }
 
-
+/*
 function drawFaceHighlight() {
     const world = camera.getWorldMatrix();
     const worldViewProjection = m4.multiply(camera.getViewProjection(), world);
@@ -187,10 +180,10 @@ function drawFaceHighlight() {
     }
 
 }
-
+*/
 
 function render(time) {
-    pseudoTime++;
+    //pseudoTime++;
 
     twgl.resizeCanvasToDisplaySize(gl.canvas);
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -202,9 +195,10 @@ function render(time) {
     gl.clearColor(0.1,0.1,0.1,1);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-    drawModel();
+    drawModel(lectern, v3.create(-0.75, 0.0, 0));
+    drawModel(hopper, v3.create(0.75, 0.0, 0));
     drawGrid();
-    drawFaceHighlight();
+    //drawFaceHighlight();
 
     requestAnimationFrame(render);
 }

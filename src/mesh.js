@@ -1,4 +1,7 @@
 const { v3: Vector3 } = require("twgl.js");
+const twgl = require('twgl.js');
+const fs = require('fs');
+const textureUtil = require('./texture.js');
 
 function getGridColour(i, j, isXAxis) {
     if (i == 0 && isXAxis) {
@@ -94,23 +97,24 @@ function editMeshVertexY(mesh, vertexIndex, y) {
 }
 
 
-function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset) {
-    console.log(uv_offset);
+function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset, num_texs) {
+    //console.log(uv_offset);
+
     if (vertex_normal[1] == 0 && vertex_normal[2] == 0) {
         let tx = 1 - vertex_position[2] / 16;
         let ty = 1 - vertex_position[1] / 16;
-        return [tx * 0.25 + uv_offset, ty]; 
+        return [tx / num_texs + uv_offset, ty]; 
     }
     if (vertex_normal[0] == 0 && vertex_normal[1] == 0) {
         let tx = 1 - vertex_position[0] / 16;
         let ty = 1 - vertex_position[1] / 16;
-        return [tx * 0.25 + uv_offset, ty]; 
+        return [tx / num_texs + uv_offset, ty]; 
     }
     // TODO: This one needs checking
     if (vertex_normal[2] == 0 && vertex_normal[0] == 0) {
         let tx = 1 - vertex_position[2] / 16;
         let ty = 1 - vertex_position[0] / 16;
-        return [tx * 0.25 + uv_offset, ty]; 
+        return [tx / num_texs + uv_offset, ty]; 
     }
     return [0, 0]; 
 }
@@ -125,13 +129,14 @@ function generateFace(positions, faceNormal, face, mesh, element, uv_offsets) {
     let num_texs = Object.keys(uv_offsets).length;
     let uv_offset = uv_offsets[faceTexture.substring(1)];
     uv_offset /= 16 * num_texs;
-    console.log(uv_offset);
+    //console.log(uv_offset);
 
     if (element.rotation) {
         rotateElement(element, positions)
     }
 
     let rot = (face.rotation || 0.0) / 90.0;
+    rot += 2;
 
     // Add a (x,y) UV coordinate for  
     let texcoord = [[0, 3], [2, 3], [2, 1], [0, 1]];
@@ -142,11 +147,14 @@ function generateFace(positions, faceNormal, face, mesh, element, uv_offsets) {
         mesh.normal = mesh.normal.concat(faceNormal);
         // Add vertex tex-coords, TODO: cleanup
         if (face.uv) {
-            let tx = uv_offset * face.uv[(texcoord[i][0] + rot) % 4] / 16;
+            console.log('Generate from UVs');
+            let tx = face.uv[(texcoord[i][0] + rot) % 4] / 16;
+            tx = tx / num_texs + uv_offset;
             let ty = face.uv[(texcoord[i][1] + rot) % 4] / 16;
             mesh.texcoord.push(tx, ty);
         } else {
-            let t = generateUVsFromPosition(positions[i], faceNormal, uv_offset);
+            console.log('Generate from positions');
+            let t = generateUVsFromPosition(positions[i], faceNormal, uv_offset, num_texs);
             mesh.texcoord.push(t[0], t[1]);
         }
     }
@@ -214,7 +222,7 @@ function multiplyMatrixVector(matrix, vector) {
 }
 
 function rotateElement(element, positions) {
-    console.log(positions);
+    //console.log(positions);
 
     const angle = element.rotation.angle * 0.0174533;
 
@@ -268,8 +276,26 @@ function generateJSONMesh(json, uv_offsets) {
     return mesh;
 }
 
+
+class Model {
+
+    constructor(filename, gl) {
+        const model = fs.readFileSync(filename, 'utf8');
+        this.modelJSON = JSON.parse(model);
+
+        const textureAtlas = textureUtil.createTextureAtlas(this.modelJSON, gl);
+        this.uvOffsets = textureAtlas.uv_offset;
+        this.textureUnit = twgl.createTexture(gl, textureAtlas.tex);
+
+        this.modelMesh = generateJSONMesh(this.modelJSON, this.uvOffsets);
+        this.modelBuffer = twgl.createBufferInfoFromArrays(gl, this.modelMesh);
+    }
+
+}
+
 module.exports.generateGridMesh = generateGridMesh;
 module.exports.generateJSONMesh = generateJSONMesh;
 module.exports.getMeshVertex = getMeshVertex;
 module.exports.editMeshVertex = editMeshVertex;
 module.exports.editMeshVertexY = editMeshVertexY;
+module.exports.Model = Model;

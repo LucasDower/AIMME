@@ -15,12 +15,12 @@ function createTextureAtlas(model_json, gl) {
         let texture_path = "./resources/" + model_json.textures[texture_key] + ".png";
         var data = fs.readFileSync(texture_path);
         var png = PNG.sync.read(data);
-        //tex_array = tex_array.concat(Array.from(png.data));
         textures.push(Array.from(png.data));
         uv_offset[texture_key] = 16 * num_textures;
         num_textures++;
     }
 
+    // TODO: cleanup
     for (let row = 0; row < 16; row++) {
         for (let texture of textures) {
             let pixel_row = [];
@@ -33,8 +33,6 @@ function createTextureAtlas(model_json, gl) {
             tex_array = tex_array.concat(pixel_row);
         }
     }
-    
-    console.log(tex_array);
 
     return {tex: {
         width: 16 * num_textures,
