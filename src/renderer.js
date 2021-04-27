@@ -6,7 +6,7 @@ const meshManager = require('./src/mesh.js');
 const rayManager = require('./src/ray.js');
 const shaderManager = require('./src/shaders.js');
 const mathUtil = require('./src/math.js');
-const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require('constants');
+const textureUtil = require('./src/texture.js');
 
 const m4 = twgl.m4;
 const v3 = twgl.v3;
@@ -18,14 +18,13 @@ var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canv
 let model = fs.readFileSync('./resources/models/block/hopper.json', 'utf8');
 model = JSON.parse(model);
 
-const texture = twgl.createTexture(gl, {
-    min: gl.NEAREST,
-    mag: gl.NEAREST,
-    src: './resources/block/hopper_outside.png'
-});
+let texture = textureUtil.createTextureAtlas(model, gl);
+let uv_offsets = texture.uv_offset;
+texture = twgl.createTexture(gl, texture.tex);
+console.log(uv_offsets)
 
 // Build mesh from model data
-const modelMesh = meshManager.generateJSONMesh(model);
+const modelMesh = meshManager.generateJSONMesh(model, uv_offsets);
 
 const gridMesh = meshManager.generateGridMesh();
 const gridBuffer = twgl.createBufferInfoFromArrays(gl, gridMesh);

@@ -94,31 +94,38 @@ function editMeshVertexY(mesh, vertexIndex, y) {
 }
 
 
-function generateUVsFromPosition(vertex_position, vertex_normal) {
+function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset) {
+    console.log(uv_offset);
     if (vertex_normal[1] == 0 && vertex_normal[2] == 0) {
         let tx = 1 - vertex_position[2] / 16;
         let ty = 1 - vertex_position[1] / 16;
-        return [tx, ty]; 
+        return [tx * 0.25 + uv_offset, ty]; 
     }
     if (vertex_normal[0] == 0 && vertex_normal[1] == 0) {
         let tx = 1 - vertex_position[0] / 16;
         let ty = 1 - vertex_position[1] / 16;
-        return [tx, ty]; 
+        return [tx * 0.25 + uv_offset, ty]; 
     }
     // TODO: This one needs checking
     if (vertex_normal[2] == 0 && vertex_normal[0] == 0) {
         let tx = 1 - vertex_position[2] / 16;
         let ty = 1 - vertex_position[0] / 16;
-        return [tx, ty]; 
+        return [tx * 0.25 + uv_offset, ty]; 
     }
     return [0, 0]; 
 }
 
 
-function generateFace(positions, faceNormal, face, mesh, element) {
+function generateFace(positions, faceNormal, face, mesh, element, uv_offsets) {
     if (face == undefined) {
         return;
     }
+
+    let faceTexture = face.texture;
+    let num_texs = Object.keys(uv_offsets).length;
+    let uv_offset = uv_offsets[faceTexture.substring(1)];
+    uv_offset /= 16 * num_texs;
+    console.log(uv_offset);
 
     if (element.rotation) {
         rotateElement(element, positions)
@@ -135,11 +142,11 @@ function generateFace(positions, faceNormal, face, mesh, element) {
         mesh.normal = mesh.normal.concat(faceNormal);
         // Add vertex tex-coords, TODO: cleanup
         if (face.uv) {
-            let tx = face.uv[(texcoord[i][0] + rot) % 4] / 16;
+            let tx = uv_offset * face.uv[(texcoord[i][0] + rot) % 4] / 16;
             let ty = face.uv[(texcoord[i][1] + rot) % 4] / 16;
             mesh.texcoord.push(tx, ty);
         } else {
-            let t = generateUVsFromPosition(positions[i], faceNormal);
+            let t = generateUVsFromPosition(positions[i], faceNormal, uv_offset);
             mesh.texcoord.push(t[0], t[1]);
         }
     }
@@ -152,7 +159,7 @@ function generateFace(positions, faceNormal, face, mesh, element) {
     mesh.facesDrawn++;
 }
 
-function generateElement(element, mesh) {
+function generateElement(element, mesh, uv_offsets) {
     // From and to coordinates
     const f = {x: element.from[0], y: element.from[1], z: element.from[2]};
     const t = {x: element.to[0], y: element.to[1], z: element.to[2]};
@@ -174,7 +181,7 @@ function generateElement(element, mesh) {
         east: [-1, 0, 0], west: [1, 0,0]
     };
 
-    faceDirections.forEach(face => generateFace(positions[face], normals[face], element.faces[face], mesh, element));
+    faceDirections.forEach(face => generateFace(positions[face], normals[face], element.faces[face], mesh, element, uv_offsets));
 
     return mesh;
 }
@@ -233,7 +240,7 @@ function rotateElement(element, positions) {
 }
 
 
-function generateJSONMesh(json) {
+function generateJSONMesh(json, uv_offsets) {
     let mesh = {
         position: [],
         normal: [],
@@ -242,7 +249,7 @@ function generateJSONMesh(json) {
         facesDrawn: 0
     };
     
-    json.elements.forEach(element => generateElement(element, mesh));
+    json.elements.forEach(element => generateElement(element, mesh, uv_offsets));
     delete mesh.facesDrawn;
 
     // Generate a map from triangle to square-face. When a ray intersects with a tri,
