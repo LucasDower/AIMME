@@ -15,13 +15,13 @@ var camera = new cameraHandler.ArcballCamera(30, gl.canvas.clientWidth / gl.canv
 
 
 // Load anvil model data and texture
-let model = fs.readFileSync('./resources/lectern.json', 'utf8');
+let model = fs.readFileSync('./resources/models/block/hopper.json', 'utf8');
 model = JSON.parse(model);
 
 const texture = twgl.createTexture(gl, {
     min: gl.NEAREST,
     mag: gl.NEAREST,
-    src: './resources/anvil.png'
+    src: './resources/block/hopper_outside.png'
 });
 
 // Build mesh from model data

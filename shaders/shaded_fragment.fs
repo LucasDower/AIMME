@@ -20,5 +20,6 @@ void main() {
   float brightness = dot(v_lightDir, a_normal);
   brightness = (0.65 * brightness) + 0.35;
 
-  gl_FragColor = diffuseColor * vec4(vec3(brightness), 1.0);
+  //gl_FragColor = diffuseColor * vec4(vec3(brightness), 1.0);
+  gl_FragColor = diffuseColor;
 }

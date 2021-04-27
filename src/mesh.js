@@ -93,6 +93,28 @@ function editMeshVertexY(mesh, vertexIndex, y) {
     }
 }
 
+
+function generateUVsFromPosition(vertex_position, vertex_normal) {
+    if (vertex_normal[1] == 0 && vertex_normal[2] == 0) {
+        let tx = 1 - vertex_position[2] / 16;
+        let ty = 1 - vertex_position[1] / 16;
+        return [tx, ty]; 
+    }
+    if (vertex_normal[0] == 0 && vertex_normal[1] == 0) {
+        let tx = 1 - vertex_position[0] / 16;
+        let ty = 1 - vertex_position[1] / 16;
+        return [tx, ty]; 
+    }
+    // TODO: This one needs checking
+    if (vertex_normal[2] == 0 && vertex_normal[0] == 0) {
+        let tx = 1 - vertex_position[2] / 16;
+        let ty = 1 - vertex_position[0] / 16;
+        return [tx, ty]; 
+    }
+    return [0, 0]; 
+}
+
+
 function generateFace(positions, faceNormal, face, mesh, element) {
     if (face == undefined) {
         return;
@@ -102,7 +124,6 @@ function generateFace(positions, faceNormal, face, mesh, element) {
         rotateElement(element, positions)
     }
 
-    let uv = face.uv;
     let rot = (face.rotation || 0.0) / 90.0;
 
     // Add a (x,y) UV coordinate for  
@@ -113,9 +134,14 @@ function generateFace(positions, faceNormal, face, mesh, element) {
         // Add vertex normal (all the same)
         mesh.normal = mesh.normal.concat(faceNormal);
         // Add vertex tex-coords, TODO: cleanup
-        let tx = uv[(texcoord[i][0] + rot) % 4] / 16;
-        let ty = uv[(texcoord[i][1] + rot) % 4] / 16;
-        mesh.texcoord.push(tx, ty);
+        if (face.uv) {
+            let tx = face.uv[(texcoord[i][0] + rot) % 4] / 16;
+            let ty = face.uv[(texcoord[i][1] + rot) % 4] / 16;
+            mesh.texcoord.push(tx, ty);
+        } else {
+            let t = generateUVsFromPosition(positions[i], faceNormal);
+            mesh.texcoord.push(t[0], t[1]);
+        }
     }
 
     // Add vertex indices
