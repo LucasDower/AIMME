@@ -17,6 +17,12 @@ class ArcballCamera {
         this.target = [0, 0.5, 0];
         this.up = [0, 1, 0];
 
+        this.mouseSensitivity = 0.005;
+        this.scrollSensitivity = 0.005;
+
+        this.zoomDistMin = 2.0;
+        this.zoomDistMax = 15.0;
+
         this.isRotating = false;
     }
 
@@ -26,10 +32,10 @@ class ArcballCamera {
         }
 
         const mouseDelta = mouseHandler.getMouseDelta();
+        this.azimuth += mouseDelta.dx * this.mouseSensitivity;
+        this.elevation += mouseDelta.dy * this.mouseSensitivity;
 
-        this.azimuth += mouseDelta.dx * 0.005;
-        this.elevation += mouseDelta.dy * 0.005;
-
+        // Prevent the camera going upside-down
         const eps = 0.01;
         this.elevation = Math.max(Math.min(Math.PI - eps, this.elevation), eps);
 
@@ -37,16 +43,18 @@ class ArcballCamera {
     }
 
     handleScroll(e) {
-        this.distance += e.deltaY * 0.005;
-        //console.log(this.distance);
-        this.distance = Math.max(Math.min(15.0, this.distance), 2.0);
+        this.distance += e.deltaY * this.scrollSensitivity;
+        this.distance = Math.max(Math.min(this.zoomDistMax, this.distance), this.zoomDistMin);
 
         this.updateCameraPosition();
     }
 
     updateCameraPosition() {
-        this.eye = [this.distance * Math.cos(this.azimuth) * -Math.sin(this.elevation), this.distance * Math.cos(this.elevation), this.distance * Math.sin(this.azimuth) * -Math.sin(this.elevation)];
-        //console.log(this.azimuth, this.elevation);
+        this.eye = [
+            this.distance * Math.cos(this.azimuth) * -Math.sin(this.elevation),
+            this.distance * Math.cos(this.elevation),
+            this.distance * Math.sin(this.azimuth) * -Math.sin(this.elevation)
+        ];
     }
 
     getProjectionMatrix() {
