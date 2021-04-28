@@ -1,4 +1,5 @@
 const { m4 } = require('twgl.js');
+const mouseHandler = require('./mouse.js');
 
 class ArcballCamera {
 
@@ -15,9 +16,17 @@ class ArcballCamera {
 
         this.target = [0, 0.5, 0];
         this.up = [0, 1, 0];
+
+        this.isRotating = false;
     }
 
-    updateCamera(mouseDelta) {
+    updateCamera() {
+        if (!this.isRotating) {
+            return;
+        }
+
+        const mouseDelta = mouseHandler.getMouseDelta();
+
         this.azimuth += mouseDelta.dx * 0.005;
         this.elevation += mouseDelta.dy * 0.005;
 
@@ -62,6 +71,10 @@ class ArcballCamera {
 
     getWorldViewProjection() {
         return m4.multiply(this.getViewProjection(), this.getWorldMatrix());
+    }
+
+    getWorldInverseTranspose() {
+        return m4.transpose(m4.inverse(this.getWorldMatrix()));
     }
 
 }
