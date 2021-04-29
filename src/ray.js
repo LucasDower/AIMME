@@ -1,9 +1,9 @@
 const { v3: Vector3 } = require('twgl.js');
-const meshManager = require('./mesh.js');
 
 const EPSILON = 1e-8;
 
-function intersectTriangle(rayOrigin, rayDest, vert0, vert1, vert2) {
+function IntersectTriangle_MT97(rayOrigin, rayDest, vert0, vert1, vert2)
+{
     let rayDir = Vector3.subtract(rayDest, rayOrigin);
 
     // find vectors for two edges sharing vert0
@@ -42,55 +42,38 @@ function intersectTriangle(rayOrigin, rayDest, vert0, vert1, vert2) {
     // calculate t, ray intersects triangle
     let t = Vector3.dot(edge2, qvec) * inv_det;
     //console.log('i');
-    return [t, u, v];
+    return t;
 }
 
-function intersectMesh(mesh, rayOrigin, rayDest) {
-    let positions = mesh.position;
-    let normals = mesh.normals;
-    let indices = mesh.indices;
-    
+function intersectMesh(mesh, ray) {
+    const rayOrigin = Vector3.create(ray.origin[0], ray.origin[1], ray.origin[2]);
+    const rayDest = Vector3.create(ray.dest[0], ray.dest[1], ray.dest[2]);
+
+    const positions = mesh.position.map(x => x / 16.0);
+    const indices = mesh.indices;
+
     let minDist = 10000;
     let hitIndices = [];
     for (let i = 0; i < indices.length; i += 3) {
         let i0 = indices[i + 0] * 3;
         let i1 = indices[i + 1] * 3;
         let i2 = indices[i + 2] * 3;
+        
+        let v0 = Vector3.create(positions[i0] - 0.5, positions[i0 + 1], positions[i0 + 2] - 0.5);
+        let v1 = Vector3.create(positions[i1] - 0.5, positions[i1 + 1], positions[i1 + 2] - 0.5);
+        let v2 = Vector3.create(positions[i2] - 0.5, positions[i2 + 1], positions[i2 + 2] - 0.5);
 
-        //let v0_ = meshManager.getMeshVertex(mesh, i, true);
-        //let v1_ = meshManager.getMeshVertex(mesh, indices[i + 1], true);
-        //let v2_ = meshManager.getMeshVertex(mesh, indices[i + 2], true);
-        //v0 = Vector3.divScalar(v0, 16.0);
-        //v0 = Vector3.subtract(v0, Vector3.create(-0.5, -0.5, -0.5));
-        let v0 = Vector3.create(positions[i0] / 16.0 - 0.5, positions[i0 + 1] / 16.0, positions[i0 + 2] / 16.0 - 0.5);
-        let v1 = Vector3.create(positions[i1] / 16.0 - 0.5, positions[i1 + 1] / 16.0, positions[i1 + 2] / 16.0 - 0.5);
-        let v2 = Vector3.create(positions[i2] / 16.0 - 0.5, positions[i2 + 1] / 16.0, positions[i2 + 2] / 16.0 - 0.5);
-
-        //console.log(v0, v0_);
-
-        let a = intersectTriangle(rayOrigin, rayDest, v0, v1, v2);
-        if (a) {
-            let k = a[0];
+        let k = IntersectTriangle_MT97(rayOrigin, rayDest, v0, v1, v2);
+        if (k) {
             if (k < minDist) {
                 minDist = k;
-                hitVertices = [v0, v1, v2];
                 hitIndices = [indices[i + 0], indices[i + 1], indices[i + 2]];
             }
         }
     }
-
-    // TODO: change
     if (hitIndices.length > 0) {
         let min = Math.min(hitIndices[0], hitIndices[1], hitIndices[2]);
-
-        let is = [0, 1, 2, 3].map(x => 3 * (x + min));
-
-        let v0_ = Vector3.create(positions[is[0]] / 16.0 - 0.5, positions[is[0] + 1] / 16.0, positions[is[0] + 2] / 16.0 - 0.5);
-        let v1_ = Vector3.create(positions[is[1]] / 16.0 - 0.5, positions[is[1] + 1] / 16.0, positions[is[1] + 2] / 16.0 - 0.5);
-        let v2_ = Vector3.create(positions[is[2]] / 16.0 - 0.5, positions[is[2] + 1] / 16.0, positions[is[2] + 2] / 16.0 - 0.5);
-        let v3_ = Vector3.create(positions[is[3]] / 16.0 - 0.5, positions[is[3] + 1] / 16.0, positions[is[3] + 2] / 16.0 - 0.5);
-
-        return {vertices: [v0_, v1_, v2_, v3_], indices:is};
+        return min;
     }
 }
 

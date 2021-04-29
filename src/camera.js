@@ -1,5 +1,6 @@
-const { m4 } = require('twgl.js');
+const { m4, v3: Vector3 } = require('twgl.js');
 const mouseHandler = require('./mouse.js');
+const mathUtil = require('./math.js');
 
 class ArcballCamera {
 
@@ -83,6 +84,26 @@ class ArcballCamera {
 
     getWorldInverseTranspose() {
         return m4.transpose(m4.inverse(this.getWorldMatrix()));
+    }
+
+    getInverseWorldViewProjection() {
+        return m4.inverse(this.getWorldViewProjection());
+    }
+
+    getMouseRay() {
+        const mousePos = mouseHandler.getMousePosNorm();
+        const inverseProjectionMatrix = this.getInverseWorldViewProjection();
+        var origin = mathUtil.multiplyMatVec4(inverseProjectionMatrix, [mousePos.x, mousePos.y, -1.0, 1.0]);
+        var dest = mathUtil.multiplyMatVec4(inverseProjectionMatrix, [mousePos.x, mousePos.y, 1.0, 1.0]);
+    
+        origin[0] /= origin[3];
+        origin[1] /= origin[3];
+        origin[2] /= origin[3];
+        dest[0] /= dest[3];
+        dest[1] /= dest[3];
+        dest[2] /= dest[3];
+    
+        return {origin: origin, dest: dest};
     }
 
 }

@@ -3,6 +3,7 @@ const mouseHandler = require('./src/mouse.js');
 const cameraHandler = require('./src/camera.js');
 const meshManager = require('./src/mesh.js');
 const shaderManager = require('./src/shaders.js');
+const rayManager = require('./src/ray.js');
 
 const m4 = twgl.m4;
 const v3 = twgl.v3;
@@ -81,9 +82,31 @@ function render(time) {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     drawModel(lectern, v3.create(0.0, 0.0, 0));
-    //drawModel(hopper, v3.create(0.75, 0.0, 0));
     drawGrid();
-    //drawFaceHighlight();
+
+    const ray = camera.getMouseRay();
+    const rayHit = rayManager.intersectMesh(lectern.modelMesh, ray);
+    if (rayHit) {
+        /*
+        const vs = rayHit.vertices;
+        const n = rayHit.normal;
+        const rayMesh = {
+            position: [
+                vs[0][0], vs[0][1], vs[0][2],
+                vs[1][0], vs[1][1], vs[1][2],
+                vs[2][0], vs[2][1], vs[2][2],
+                vs[3][0], vs[3][1], vs[3][2]
+            ],
+            indices: [0, 1, 2, 3]
+        };
+        */
+       const rayMesh = meshManager.getFaceMesh(lectern.modelMesh, rayHit);
+        const uniforms = {
+            u_worldViewProjection: camera.getWorldViewProjection(),
+        };
+        const buffer = twgl.createBufferInfoFromArrays(gl, rayMesh);
+        drawBufferWithShader(gl.TRIANGLE_FAN, buffer, uniforms, shaderManager.testProgram);
+    }
 
     requestAnimationFrame(render);
 }

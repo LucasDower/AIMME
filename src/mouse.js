@@ -34,8 +34,4 @@ module.exports = {
         return { x: normX, y: normY };
     },
 
-    getMousePos: () => {
-        return currentMouse;
-    }
-
 };

@@ -97,8 +97,32 @@ function editMeshVertexY(mesh, vertexIndex, y) {
 }
 
 
+function getFaceMesh(mesh, index) {
+    let vertexIndices = [0, 1, 2, 3].map(x => 3 * (x + index));
+
+    let faceMesh = {
+        position: [],
+        normal: [],
+        indices: [0, 1, 2, 3] 
+    };
+
+    const offset = Vector3.create(0.5, 0.0, 0.5);
+    for (let vertexIndex of vertexIndices) {
+        let vertexPosition = Vector3.create(mesh.position[vertexIndex], mesh.position[vertexIndex + 1], mesh.position[vertexIndex + 2]);
+        const vertexNormal = Vector3.create(mesh.normal[vertexIndex], mesh.normal[vertexIndex + 1], mesh.normal[vertexIndex + 2]);
+
+        vertexPosition = Vector3.divScalar(vertexPosition, 16.0);
+        vertexPosition = Vector3.subtract(vertexPosition, offset);
+
+        faceMesh.position = faceMesh.position.concat(Array.from(vertexPosition));
+        faceMesh.normal = faceMesh.normal.concat(Array.from(vertexNormal));
+    }
+
+    return faceMesh;
+}
+
+
 function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset, num_texs, rot) {
-    console.log("rot: " + rot);
     let y = [0, 0];
     if (vertex_normal[1] == 0 && vertex_normal[2] == 0) {
         let tx = 1 - vertex_position[2] / 16;
@@ -118,11 +142,6 @@ function generateUVsFromPosition(vertex_position, vertex_normal, uv_offset, num_
     } else {
         throw "Bad normal";
     }
-    /*
-    if (rot == 2) {
-        return [1.0 - y[0], 1.0 - y[1]];
-    }
-    */
     return y;
 }
 
@@ -136,10 +155,9 @@ function generateFace(positions, faceNormal, face, mesh, element, uv_offsets) {
     let num_texs = Object.keys(uv_offsets).length;
     let uv_offset = uv_offsets[faceTexture.substring(1)];
     uv_offset /= 16 * num_texs;
-    //console.log(uv_offset);
 
     if (element.rotation) {
-        rotateElement(element, positions)
+        rotateElement(element, positions);
     }
 
     let rot = (face.rotation || 180.0) / 90.0;
@@ -205,17 +223,17 @@ function generateElement(element, mesh, uv_offsets) {
 function createRotationMatrix(theta, l, m, n) {
     let matrix = [[0,0,0], [0,0,0], [0,0,0]];
     // Top row
-    matrix[0][0] = l * l * (1 - Math.cos(theta)) + Math.cos(theta)
-    matrix[0][1] = m * l * (1 - Math.cos(theta)) - n * Math.sin(theta)
-    matrix[0][2] = n * l * (1 - Math.cos(theta)) + m * Math.sin(theta)
+    matrix[0][0] = l * l * (1 - Math.cos(theta)) + Math.cos(theta);
+    matrix[0][1] = m * l * (1 - Math.cos(theta)) - n * Math.sin(theta);
+    matrix[0][2] = n * l * (1 - Math.cos(theta)) + m * Math.sin(theta);
     // Middle row
-    matrix[1][0] = l * m * (1 - Math.cos(theta)) + n * Math.sin(theta)
-    matrix[1][1] = m * m * (1 - Math.cos(theta)) + Math.cos(theta)
-    matrix[1][2] = n * m * (1 - Math.cos(theta)) - l * Math.sin(theta)
+    matrix[1][0] = l * m * (1 - Math.cos(theta)) + n * Math.sin(theta);
+    matrix[1][1] = m * m * (1 - Math.cos(theta)) + Math.cos(theta);
+    matrix[1][2] = n * m * (1 - Math.cos(theta)) - l * Math.sin(theta);
     // Bottom row
-    matrix[2][0] = l * n * (1 - Math.cos(theta)) - m * Math.sin(theta)
-    matrix[2][1] = m * n * (1 - Math.cos(theta)) + l * Math.sin(theta)
-    matrix[2][2] = n * n * (1 - Math.cos(theta)) + Math.cos(theta)
+    matrix[2][0] = l * n * (1 - Math.cos(theta)) - m * Math.sin(theta);
+    matrix[2][1] = m * n * (1 - Math.cos(theta)) + l * Math.sin(theta);
+    matrix[2][2] = n * n * (1 - Math.cos(theta)) + Math.cos(theta);
 
     return matrix;
 }
@@ -229,8 +247,6 @@ function multiplyMatrixVector(matrix, vector) {
 }
 
 function rotateElement(element, positions) {
-    //console.log(positions);
-
     const angle = element.rotation.angle * 0.0174533;
 
     const axisToVector = {
@@ -305,4 +321,5 @@ module.exports.generateJSONMesh = generateJSONMesh;
 module.exports.getMeshVertex = getMeshVertex;
 module.exports.editMeshVertex = editMeshVertex;
 module.exports.editMeshVertexY = editMeshVertexY;
+module.exports.getFaceMesh = getFaceMesh;
 module.exports.Model = Model;
