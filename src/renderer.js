@@ -20,7 +20,9 @@ let lectern = new meshManager.Model('./resources/models/block/lectern.json', gl)
 
 
 gl.canvas.addEventListener('mousedown', (e) => {
-    camera.isRotating = true;
+    if (!rayManager.isRayHitting()) {
+        camera.isRotating = true;
+    }
 });
 
 gl.canvas.addEventListener('mouseup', (e) => {
@@ -62,6 +64,17 @@ function drawModel(model, translation) {
 }
 
 
+function drawFaceHighlight(modelMesh, rayHit) {
+    const rayMesh = meshManager.getFaceMesh(modelMesh, rayHit);
+    const uniforms = {
+        u_worldViewProjection: camera.getWorldViewProjection(),
+    };
+    const buffer = twgl.createBufferInfoFromArrays(gl, rayMesh);
+
+    drawBufferWithShader(gl.TRIANGLE_FAN, buffer, uniforms, shaderManager.testProgram);
+}
+
+
 function drawBufferWithShader(drawMode, buffer, uniforms, shader) {
     gl.useProgram(shader.program);
     twgl.setBuffersAndAttributes(gl, shader, buffer);
@@ -84,28 +97,9 @@ function render(time) {
     drawModel(lectern, v3.create(0.0, 0.0, 0));
     drawGrid();
 
-    const ray = camera.getMouseRay();
-    const rayHit = rayManager.intersectMesh(lectern.modelMesh, ray);
-    if (rayHit) {
-        /*
-        const vs = rayHit.vertices;
-        const n = rayHit.normal;
-        const rayMesh = {
-            position: [
-                vs[0][0], vs[0][1], vs[0][2],
-                vs[1][0], vs[1][1], vs[1][2],
-                vs[2][0], vs[2][1], vs[2][2],
-                vs[3][0], vs[3][1], vs[3][2]
-            ],
-            indices: [0, 1, 2, 3]
-        };
-        */
-       const rayMesh = meshManager.getFaceMesh(lectern.modelMesh, rayHit);
-        const uniforms = {
-            u_worldViewProjection: camera.getWorldViewProjection(),
-        };
-        const buffer = twgl.createBufferInfoFromArrays(gl, rayMesh);
-        drawBufferWithShader(gl.TRIANGLE_FAN, buffer, uniforms, shaderManager.testProgram);
+    const rayHit = rayManager.intersectMesh(lectern.modelMesh, camera.getMouseRay());
+    if (rayHit != undefined) {
+        drawFaceHighlight(lectern.modelMesh, rayHit);
     }
 
     requestAnimationFrame(render);

@@ -80,21 +80,7 @@ function getMeshVertex(mesh, vertexIndex, transform) {
     return Vector3.create(v0, v1, v2);
 }
 
-let vertexIndexMap = {};
-
-function editMeshVertex(mesh, vertexIndex, editedVertex) {
-    for (let duplicateVertexIndex of vertexIndexMap[vertexIndex]) {
-        mesh.position[duplicateVertexIndex + 0] = editedVertex[0];
-        mesh.position[duplicateVertexIndex + 1] = editedVertex[1];
-        mesh.position[duplicateVertexIndex + 2] = editedVertex[2];
-    }
-}
-
-function editMeshVertexY(mesh, vertexIndex, y) {
-    for (let duplicateVertexIndex of vertexIndexMap[vertexIndex]) {
-        mesh.position[duplicateVertexIndex + 1] = y;
-    }
-}
+//let vertexIndexMap = {};
 
 
 function getFaceMesh(mesh, index) {
@@ -271,55 +257,88 @@ function rotateElement(element, positions) {
 }
 
 
-function generateJSONMesh(json, uv_offsets) {
-    let mesh = {
-        position: [],
-        normal: [],
-        texcoord: [],
-        indices: [],
-        facesDrawn: 0
-    };
-    
-    json.elements.forEach(element => generateElement(element, mesh, uv_offsets));
-    delete mesh.facesDrawn;
-
-    // Generate a map from triangle to square-face. When a ray intersects with a tri,
-    // we must retrieve the other triangle which makes up the square-face.
-    let intermediateMap = {};
-    for (let i = 0; i < mesh.position.length; i+=3) {
-        let vertex = mesh.position.slice(i, i+3);
-        intermediateMap[vertex] = (intermediateMap[vertex] || []).concat(i);
-    }
-    for (let values of Object.values(intermediateMap)) {
-        for (let v of values) {
-            vertexIndexMap[v / 3] = values;
-        }
-    }
-
-    return mesh;
-}
-
-
 class Model {
 
     constructor(filename, gl) {
         const model = fs.readFileSync(filename, 'utf8');
         this.modelJSON = JSON.parse(model);
+        this.gl = gl;
 
         const textureAtlas = textureUtil.createTextureAtlas(this.modelJSON, gl);
         this.uvOffsets = textureAtlas.uv_offset;
         this.textureUnit = twgl.createTexture(gl, textureAtlas.tex);
 
-        this.modelMesh = generateJSONMesh(this.modelJSON, this.uvOffsets);
-        this.modelBuffer = twgl.createBufferInfoFromArrays(gl, this.modelMesh);
+        this.generateJSONMesh(this.modelJSON, this.uvOffsets);
+        this.updateBuffer();
+        
+    }
+
+    updateBuffer() {
+        this.modelBuffer = twgl.createBufferInfoFromArrays(this.gl, this.modelMesh);
+    }
+    
+    generateJSONMesh(json, uv_offsets) {
+        this.modelMesh = {
+            position: [],
+            normal: [],
+            texcoord: [],
+            indices: [],
+            facesDrawn: 0
+        };
+        
+        json.elements.forEach(element => generateElement(element, this.modelMesh, uv_offsets));
+        delete this.modelMesh.facesDrawn;
+
+        // Generate a map from triangle to square-face. When a ray intersects with a tri,
+        // we must retrieve the other triangle which makes up the square-face.
+        let intermediateMap = {};
+        for (let i = 0; i < this.modelMesh.position.length; i+=3) {
+            let vertex = this.modelMesh.position.slice(i, i+3);
+            intermediateMap[vertex] = (intermediateMap[vertex] || []).concat(i);
+        }
+
+        this.vertexIndexMap = {};
+        for (let values of Object.values(intermediateMap)) {
+            for (let v of values) {
+                this.vertexIndexMap[v / 3] = values;
+            }
+        }
+    }
+
+
+    // Move vertex along it's normal
+    moveVertex(index, distance) {
+        const normal = this.modelMesh.normal.slice(index, index + 3);
+        const vertexOffset = normal.map(x => x * distance);
+
+        const x = this.modelMesh.position[index + 0] + vertexOffset[0];
+        const y = this.modelMesh.position[index + 1] + vertexOffset[1];
+        const z = this.modelMesh.position[index + 2] + vertexOffset[2];
+
+        this.modelMesh.position[index + 0] = x;
+        this.modelMesh.position[index + 1] = y;
+        this.modelMesh.position[index + 2] = z;
+        
+        for (let duplicateVertexIndex of this.vertexIndexMap[index / 3]) {
+            this.modelMesh.position[duplicateVertexIndex + 0] = x;
+            this.modelMesh.position[duplicateVertexIndex + 1] = y;
+            this.modelMesh.position[duplicateVertexIndex + 2] = z;
+        }
+        
+    }
+
+    moveFace(index, distance) {
+        let vertexIndices = [0, 1, 2, 3].map(x => 3 * (x + index));
+
+        for (let vertexIndex of vertexIndices) {
+            this.moveVertex(vertexIndex, distance);
+        }
+        this.updateBuffer();
     }
 
 }
 
 module.exports.generateGridMesh = generateGridMesh;
-module.exports.generateJSONMesh = generateJSONMesh;
 module.exports.getMeshVertex = getMeshVertex;
-module.exports.editMeshVertex = editMeshVertex;
-module.exports.editMeshVertexY = editMeshVertexY;
 module.exports.getFaceMesh = getFaceMesh;
 module.exports.Model = Model;
